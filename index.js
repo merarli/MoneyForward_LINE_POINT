@@ -34,49 +34,84 @@ const puppeteer = require('puppeteer');
 
   //メールアドレス入力
   await page.type('#identifierId', user_data.mail)
-  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter')
 
   // 遷移完了を待機する。
   await page.waitForNavigation()
 
   //すぐにパスワードを入力すると、入力が正しく行われないのでスリープする
   await page.waitFor(1000)
-  await page.type('input[type=password]',user_data.password)
+  await page.type('input[type=password]', user_data.password)
 
   await page.keyboard.press('Enter')
 
   // 遷移完了を待機する。
   await page.waitForNavigation()
 
-  //家計ページに移動
-  await page.goto('https://moneyforward.com/cf')
+  //date: 日付 yyyy/mm/dd
+  //money_amount: 金額 string
+  //spending_src_id: 支出元id string
+  //big_divisions_id: 大区分 string
+  //small_divisions_id: 小区分 number
+  //small_divisions_id: 小区分 number
+  //text: 内容(任意) string
+  const setSpending = async ({ date, money_amount, spending_src_id, big_divisions_id, small_divisions_id, text }) => {
+    console.log({ date, money_amount, spending_src_id, big_divisions_id, small_divisions_id, text })
+    //家計ページに移動
+    await page.goto('https://moneyforward.com/cf')
 
-  // // 遷移完了を待機する。
-  // await page.waitForNavigation()
+    const tenyuryoku_button = await page.$('.mf-mb-medium button')
+    await tenyuryoku_button.click()
 
-  const tenyuryoku_button = await page.$('.mf-mb-medium button')
-  await tenyuryoku_button.click()
+    const set_date = date
+    //日付を空にする
+    await page.$eval('input[id="updated-at"]', (element) =>{
+      element.value = ''
+    })
+    await page.waitFor(500)
 
-  //日付を入力
-  await page.$eval('input[id="updated-at"]', element => element.value = '2020/09/01');
-  await page.waitFor(200)
+    //日付を入力
+    await page.type('input[id="updated-at"]', date)
+    //日付入力は入力補助のプラグインが悪さするのかわからないが、入力完了までにerrorが起きるので余裕をもって２秒sleep
+    await page.waitFor(2000)
+    //外部をクリックして日付入力を確定させる
+    await page.click('.modal-header')
 
-  //価格を入力
-  await page.type('input[name="user_asset_act[amount]"]', '500');
+    //価格を入力
+    await page.type('input[name="user_asset_act[amount]"]', money_amount)
 
-  //大区分
-  await page.click('#js-large-category-selected')
-  await page.waitFor(200)
-  await page.click('a[id="10"]')
+    //支出元をクリック
+    await page.select('select[id="user_asset_act_sub_account_id_hash"]', spending_src_id)
+    await page.waitFor(200)
 
-  //小区分
-  await page.click('#js-middle-category-selected')
-  await page.waitFor(200)
-  await page.click('a[id="95"]')
+    //大区分
+    await page.click('#js-large-category-selected')
+    await page.waitFor(200)
+    await page.click(`a[id="${big_divisions_id}"]`)
 
-  //内容
-  await page.type('input[id="js-content-field"]', 'タバコテスト');
+    //小区分
+    await page.click('#js-middle-category-selected')
+    await page.waitFor(200)
+    await page.click(`a[id="${small_divisions_id}"]`)
 
+    //内容
+    await page.type('input[id="js-content-field"]', text)
+
+    //保存
+    await page.click('input[id="submit-button"]')
+    await page.waitFor(500)
+    //閉じる
+    await page.click('input[id="cancel-button"]')
+  }
+
+  await setSpending({
+    date: '2020/09/02',
+    money_amount: '520',
+    spending_src_id: 'Svu0k4ngMOHFoDZV3OtSQw',
+    big_divisions_id: 10,
+    small_divisions_id: 95,
+    text: '関数テスト'
+  })
 
   // await browser.close()
 })().catch(error => console.error(error))
