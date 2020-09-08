@@ -169,15 +169,20 @@ const spending_json = require('/Users/merarli/Downloads/2020-09-08-18-57-line-po
   for (const item in spending_json) {
     console.log(spending_json[item])
 
-    //とりあえず５月まで登録
-    if (spending_json[item].date.toString().includes('2020-04')) {
+    //とりあえず2月まで登録
+    if (spending_json[item].date.toString().includes('2020-01')) {
       break
     }
 
-  //５月だけ登録する
-   if(!spending_json[item].date.toString().includes('2020-05')){
-     continue
-   }
+    //4,3,2月だけ登録する
+    if(
+      !spending_json[item].date.toString().includes('2020-04') &&
+      !spending_json[item].date.toString().includes('2020-03') &&
+      !spending_json[item].date.toString().includes('2020-02')
+    ){
+      continue
+    }
+
     await setSpending({
       date: spending_json[item].date.slice(0, 10).replace(/-/g, '/'),
       money_amount: (Math.abs(Number(spending_json[item].point))).toString(),
@@ -188,29 +193,44 @@ const spending_json = require('/Users/merarli/Downloads/2020-09-08-18-57-line-po
     })
   }
 
-  // for (const item in income_json){
-  //   console.log(income_json[item])
-  //   //マイナスなら支出
-  //   if(Number(income_json[item].point) < 0){
-  //     await setSpending({
-  //       date: income_json[item].date.slice(0,10).replace(/-/g,'/'),
-  //       money_amount: (Math.abs(Number(income_json[item].point))).toString(),
-  //       spending_src_id: 'Svu0k4ngMOHFoDZV3OtSQw',
-  //       big_divisions_id: 18,//その他
-  //       small_divisions_id: 8811442,
-  //       text: income_json[item].title
-  //     })
-  //   }else{
-  //     await setIncome({
-  //       date: income_json[item].date.slice(0,10).replace(/-/g,'/'),
-  //       money_amount: income_json[item].point,
-  //       spending_src_id: 'Svu0k4ngMOHFoDZV3OtSQw',
-  //       big_divisions_id: 1,//収入
-  //       small_divisions_id: 4486837,
-  //       text: income_json[item].title
-  //     })
-  //   }
-  // }
+  for (const item in income_json){
+    console.log(income_json[item])
+
+    //とりあえず2月まで登録
+    if (income_json[item].date.toString().includes('2020-01')) {
+      break
+    }
+
+    //4,3,2月だけ登録する
+    if(
+      !income_json[item].date.toString().includes('2020-04') &&
+      !income_json[item].date.toString().includes('2020-03') &&
+      !income_json[item].date.toString().includes('2020-02')
+    ){
+      continue
+    }
+
+    //マイナスなら支出
+    if(Number(income_json[item].point) < 0){
+      await setSpending({
+        date: income_json[item].date.slice(0,10).replace(/-/g,'/'),
+        money_amount: (Math.abs(Number(income_json[item].point))).toString(),
+        spending_src_id: 'Svu0k4ngMOHFoDZV3OtSQw',
+        big_divisions_id: 18,//その他
+        small_divisions_id: 8811442,
+        text: income_json[item].title
+      })
+    }else{
+      await setIncome({
+        date: income_json[item].date.slice(0,10).replace(/-/g,'/'),
+        money_amount: income_json[item].point,
+        spending_src_id: 'Svu0k4ngMOHFoDZV3OtSQw',
+        big_divisions_id: 1,//収入
+        small_divisions_id: 4486837,
+        text: income_json[item].title
+      })
+    }
+  }
 
   // await browser.close()
 })().catch(error => console.error(error))
