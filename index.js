@@ -1,9 +1,8 @@
 const puppeteer = require('puppeteer')
-const JSONStream  = require('JSONStream')
-const fs  = require('fs')
 
 //登録データ読み込み
 const income_json = require('/Users/merarli/Downloads/2020-09-08-16-59-line-point.json')
+const spending_json = require('/Users/merarli/Downloads/2020-09-08-18-57-line-point-use.json')
 
 ;(async () => {
   const browser = await puppeteer.launch({
@@ -167,60 +166,51 @@ const income_json = require('/Users/merarli/Downloads/2020-09-08-16-59-line-poin
     // await page.click('input[id="cancel-button"]')
   }
 
+  for (const item in spending_json) {
+    console.log(spending_json[item])
 
-  for (const item in income_json){
-    console.log(income_json[item])
-    //マイナスなら支出
-    if(Number(income_json[item].point) < 0){
-      await setSpending({
-        date: income_json[item].date.slice(0,10).replace(/-/g,'/'),
-        money_amount: (Math.abs(Number(income_json[item].point))).toString(),
-        spending_src_id: 'Svu0k4ngMOHFoDZV3OtSQw',
-        big_divisions_id: 18,//その他
-        small_divisions_id: 8811442,
-        text: income_json[item].title
-      })
-    }else{
-      await setIncome({
-        date: income_json[item].date.slice(0,10).replace(/-/g,'/'),
-        money_amount: income_json[item].point,
-        spending_src_id: 'Svu0k4ngMOHFoDZV3OtSQw',
-        big_divisions_id: 1,//収入
-        small_divisions_id: 4486837,
-        text: income_json[item].title
-      })
+    //とりあえず５月まで登録
+    if (spending_json[item].date.toString().includes('2020-04')) {
+      break
     }
+
+  //５月だけ登録する
+   if(!spending_json[item].date.toString().includes('2020-05')){
+     continue
+   }
+    await setSpending({
+      date: spending_json[item].date.slice(0, 10).replace(/-/g, '/'),
+      money_amount: (Math.abs(Number(spending_json[item].point))).toString(),
+      spending_src_id: 'Svu0k4ngMOHFoDZV3OtSQw',
+      big_divisions_id: 0,//未分類
+      small_divisions_id: 0,//未分類
+      text: spending_json[item].title
+    })
   }
 
-  // const stream = await fs.createReadStream('/Users/merarli/Downloads/2020-09-08-16-59-line-point.json').pipe(JSONStream.parse('$*'))
-  //
-  // let income = []
-  // await stream.on('data', (data) => {
-  //   // console.log('data.value:')
-  //   // console.log(data.value)
-  //   income.push({
-  //     text: data.value.text,
-  //     date: data.value.date.slice(0,10).replace(/-/g,'/'),
-  //     money_amount: data.value.point
-  //   })
-  // })
-  //
-  // console.log('income: ')
-  // console.log(JSON.stringify(income))
-
-  // income.forEach(item=>{
-  //   console.log(item.title)
-  // })
-
-  // await setIncome({
-  //   date: '2020/09/02',
-  //   money_amount: '-520',
-  //   spending_src_id: 'Svu0k4ngMOHFoDZV3OtSQw',
-  //   big_divisions_id: 1,
-  //   small_divisions_id: 4486837,
-  //   text: '収入テスト'
-  // })
-
+  // for (const item in income_json){
+  //   console.log(income_json[item])
+  //   //マイナスなら支出
+  //   if(Number(income_json[item].point) < 0){
+  //     await setSpending({
+  //       date: income_json[item].date.slice(0,10).replace(/-/g,'/'),
+  //       money_amount: (Math.abs(Number(income_json[item].point))).toString(),
+  //       spending_src_id: 'Svu0k4ngMOHFoDZV3OtSQw',
+  //       big_divisions_id: 18,//その他
+  //       small_divisions_id: 8811442,
+  //       text: income_json[item].title
+  //     })
+  //   }else{
+  //     await setIncome({
+  //       date: income_json[item].date.slice(0,10).replace(/-/g,'/'),
+  //       money_amount: income_json[item].point,
+  //       spending_src_id: 'Svu0k4ngMOHFoDZV3OtSQw',
+  //       big_divisions_id: 1,//収入
+  //       small_divisions_id: 4486837,
+  //       text: income_json[item].title
+  //     })
+  //   }
+  // }
 
   // await browser.close()
 })().catch(error => console.error(error))
