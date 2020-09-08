@@ -1,9 +1,14 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer')
+const JSONStream  = require('JSONStream')
+const fs  = require('fs')
 
-(async () => {
+//登録データ読み込み
+const income_json = require('/Users/merarli/Downloads/2020-09-08-16-59-line-point.json')
+
+;(async () => {
   const browser = await puppeteer.launch({
     headless: false,  // ブラウザが動く様子を確認する
-    slowMo: 8  // 動作確認しやすいようにpuppeteerの操作を遅延させる
+    slowMo: 3  // 動作確認しやすいようにpuppeteerの操作を遅延させる
   })
   const page = await browser.newPage()
 
@@ -72,7 +77,7 @@ const puppeteer = require('puppeteer');
     //日付を入力
     await page.type('input[id="updated-at"]', date)
     //日付入力は入力補助のプラグインが悪さするのかわからないが、入力完了までにerrorが起きるので余裕をもって２秒sleep
-    await page.waitFor(2000)
+    await page.waitFor(1000)
     //外部をクリックして日付入力を確定させる
     await page.click('.modal-header')
 
@@ -84,13 +89,13 @@ const puppeteer = require('puppeteer');
     await page.waitFor(200)
 
     //大区分
-    await page.click('#js-large-category-selected')
-    await page.waitFor(200)
-    await page.click(`a[id="${big_divisions_id}"]`)
+    await page.click('a[id="js-large-category-selected"]')
+    await page.waitFor(500)
+    await page.click(`.dropdown-submenu > a[id="${big_divisions_id}"]`)
 
     //小区分
-    await page.click('#js-middle-category-selected')
-    await page.waitFor(200)
+    await page.click('a[id="js-middle-category-selected"]')
+    await page.waitFor(500)
     await page.click(`a[id="${small_divisions_id}"]`)
 
     //内容
@@ -98,9 +103,9 @@ const puppeteer = require('puppeteer');
 
     //保存
     await page.click('input[id="submit-button"]')
-    await page.waitFor(500)
+    await page.waitFor(1000)
     //閉じる
-    await page.click('input[id="cancel-button"]')
+    // await page.click('input[id="cancel-button"]')
   }
 
   //date: 日付 yyyy/mm/dd
@@ -131,7 +136,7 @@ const puppeteer = require('puppeteer');
     //日付を入力
     await page.type('input[id="updated-at"]', date)
     //日付入力は入力補助のプラグインが悪さするのかわからないが、入力完了までにerrorが起きるので余裕をもって２秒sleep
-    await page.waitFor(2000)
+    await page.waitFor(1000)
     //外部をクリックして日付入力を確定させる
     await page.click('.modal-header')
 
@@ -144,12 +149,12 @@ const puppeteer = require('puppeteer');
 
     //大区分
     await page.click('#js-large-category-selected')
-    await page.waitFor(200)
+    await page.waitFor(500)
     await page.click(`a[id="${big_divisions_id}"]`)
 
     //小区分
     await page.click('#js-middle-category-selected')
-    await page.waitFor(200)
+    await page.waitFor(500)
     await page.click(`a[id="${small_divisions_id}"]`)
 
     //内容
@@ -157,28 +162,64 @@ const puppeteer = require('puppeteer');
 
     //保存
     await page.click('input[id="submit-button"]')
-    await page.waitFor(500)
+    await page.waitFor(1000)
     //閉じる
-    await page.click('input[id="cancel-button"]')
+    // await page.click('input[id="cancel-button"]')
   }
 
-  // await setSpending({
-  //   date: '2020/09/02',
-  //   money_amount: '520',
-  //   spending_src_id: 'Svu0k4ngMOHFoDZV3OtSQw',
-  //   big_divisions_id: 10,
-  //   small_divisions_id: 95,
-  //   text: '関数テスト'
+
+  for (const item in income_json){
+    console.log(income_json[item])
+    //マイナスなら支出
+    if(Number(income_json[item].point) < 0){
+      await setSpending({
+        date: income_json[item].date.slice(0,10).replace(/-/g,'/'),
+        money_amount: (Math.abs(Number(income_json[item].point))).toString(),
+        spending_src_id: 'Svu0k4ngMOHFoDZV3OtSQw',
+        big_divisions_id: 18,//その他
+        small_divisions_id: 8811442,
+        text: income_json[item].title
+      })
+    }else{
+      await setIncome({
+        date: income_json[item].date.slice(0,10).replace(/-/g,'/'),
+        money_amount: income_json[item].point,
+        spending_src_id: 'Svu0k4ngMOHFoDZV3OtSQw',
+        big_divisions_id: 1,//収入
+        small_divisions_id: 4486837,
+        text: income_json[item].title
+      })
+    }
+  }
+
+  // const stream = await fs.createReadStream('/Users/merarli/Downloads/2020-09-08-16-59-line-point.json').pipe(JSONStream.parse('$*'))
+  //
+  // let income = []
+  // await stream.on('data', (data) => {
+  //   // console.log('data.value:')
+  //   // console.log(data.value)
+  //   income.push({
+  //     text: data.value.text,
+  //     date: data.value.date.slice(0,10).replace(/-/g,'/'),
+  //     money_amount: data.value.point
+  //   })
+  // })
+  //
+  // console.log('income: ')
+  // console.log(JSON.stringify(income))
+
+  // income.forEach(item=>{
+  //   console.log(item.title)
   // })
 
-  await setIncome({
-    date: '2020/09/02',
-    money_amount: '520',
-    spending_src_id: 'Svu0k4ngMOHFoDZV3OtSQw',
-    big_divisions_id: 1,
-    small_divisions_id: 4486837,
-    text: '収入テスト'
-  })
+  // await setIncome({
+  //   date: '2020/09/02',
+  //   money_amount: '-520',
+  //   spending_src_id: 'Svu0k4ngMOHFoDZV3OtSQw',
+  //   big_divisions_id: 1,
+  //   small_divisions_id: 4486837,
+  //   text: '収入テスト'
+  // })
 
 
   // await browser.close()
