@@ -3,7 +3,7 @@ const puppeteer = require('puppeteer');
 (async () => {
   const browser = await puppeteer.launch({
     headless: false,  // ブラウザが動く様子を確認する
-    slowMo: 20  // 動作確認しやすいようにpuppeteerの操作を遅延させる
+    slowMo: 8  // 動作確認しやすいようにpuppeteerの操作を遅延させる
   })
   const page = await browser.newPage()
 
@@ -48,31 +48,35 @@ const puppeteer = require('puppeteer');
   // 遷移完了を待機する。
   await page.waitForNavigation()
 
-  // let itemSelector="some selecter > .buttonWrapper > div > a";
-  // let listSelector="some selecter > .buttonWrapper > div > a";
-  //
-  // var item = await page.$(itemSelector);
-  // var data = await (await item.getProperty('textContent')).jsonValue();
+  //家計ページに移動
+  await page.goto('https://moneyforward.com/cf')
 
+  // // 遷移完了を待機する。
+  // await page.waitForNavigation()
 
-  // console.log('go_google_login_page: ' + await go_google_login_page.getProperty('textContent').jsonValue())
-  // console.log(JSON.stringify(login_buttons))
-  //
-  // for (let i = 0; i < login_buttons.length; i++) {
-  //   console.log(await login_buttons[i].getProperties('textContent').jsonValue())
-  // }
+  const tenyuryoku_button = await page.$('.mf-mb-medium button')
+  await tenyuryoku_button.click()
 
-  // for (const login_button in login_buttons) {
-  //   console.log('login_button: ' + login_button)
-  // }
+  //日付を入力
+  await page.$eval('input[id="updated-at"]', element => element.value = '2020/09/01');
+  await page.waitFor(200)
 
+  //価格を入力
+  await page.type('input[name="user_asset_act[amount]"]', '500');
 
-  // メールアドレスとパスワードを入力する
+  //大区分
+  await page.click('#js-large-category-selected')
+  await page.waitFor(200)
+  await page.click('a[id="10"]')
 
-  // await page.type('#password', 'secret')
-  // ログインボタンを押す
-  // const loginButton = await page.$('button[type=submit]')
-  // await loginButton.click()
+  //小区分
+  await page.click('#js-middle-category-selected')
+  await page.waitFor(200)
+  await page.click('a[id="95"]')
+
+  //内容
+  await page.type('input[id="js-content-field"]', 'タバコテスト');
+
 
   // await browser.close()
 })().catch(error => console.error(error))
